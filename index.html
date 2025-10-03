@@ -2,21 +2,53 @@
 <html>
   <head>
     <title>HummingbirdZ Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <style>
       html, body { margin: 0; padding: 0; height: 100%; }
       #map { height: 100%; width: 100%; }
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8"></script>
+    <!-- 1. Load the Maps API and call initMap when ready -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap"
+      async
+      defer
+    ></script>
   </head>
   <body>
     <div id="map"></div>
+
     <script>
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 50.721, lng: -3.531 }, // Exeter area
-        zoom: 10,
-        mapTypeId: "roadmap"
-      });
+      let map;
+
+      // 2. Called automatically by the Maps API
+      function initMap() {
+        map = new google.maps.Map(
+          document.getElementById("map"),
+          {
+            center: { lat: 50.721, lng: -3.531 },
+            zoom: 10,
+            mapTypeId: "roadmap"
+          }
+        );
+
+        // 3. Inject your Apps-Script URL as JSONP
+        const jsonp = document.createElement("script");
+        jsonp.src =
+          "https://script.google.com/macros/s/AKfycbwocJBbSUgMMIos8S443mdkP4ukY6cemJ9m-vAz9spu/dev"
+          + "?callback=gotGeoJson";
+        document.body.appendChild(jsonp);
+      }
+
+      // 4. This runs when your Apps-Script responds
+      function gotGeoJson(data) {
+        data.features.forEach(feature => {
+          const [lng, lat] = feature.geometry.coordinates;
+          new google.maps.Marker({
+            position: { lat, lng },
+            map: map
+          });
+        });
+      }
     </script>
   </body>
 </html>
