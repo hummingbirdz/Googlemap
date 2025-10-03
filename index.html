@@ -1,56 +1,37 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>HummingbirdZ Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Simple Map Pin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       html, body { margin: 0; padding: 0; height: 100%; }
       #map { height: 100%; width: 100%; }
     </style>
-
-    <!-- 1. Define initMap & gotGeoJson *first*, on the window object -->
     <script>
-      let map;
+      function initMap() {
+        // Center map on the location you want
+        const location = { lat: 50.7208226, lng: -3.5511166 };
 
-      // Called by the Maps API once it loads
-      window.initMap = function() {
-        map = new google.maps.Map(
-          document.getElementById("map"),
-          {
-            center: { lat: 50.721, lng: -3.531 },
-            zoom: 10,
-            mapTypeId: "roadmap"
-          }
-        );
-
-        // Inject your Apps Script URL as a JSONP <script> tag
-        const jsonp = document.createElement("script");
-        jsonp.src =
-          "https://script.google.com/macros/s/AKfycbwocJBbSUgMMIos8S443mdkP4ukY6cemJ9m-vAz9spu/exec"
-          + "?callback=gotGeoJson";
-        document.body.appendChild(jsonp);
-      };
-
-      // Called by your Apps Script JSONP response
-      window.gotGeoJson = function(collection) {
-        collection.features.forEach(feature => {
-          const [lng, lat] = feature.geometry.coordinates;
-          new google.maps.Marker({
-            position: { lat, lng },
-            map: map
-          });
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 15,
+          center: location
         });
-      };
-    </script>
 
-    <!-- 2. Now load the Maps API; it will call initMap when ready -->
+        // Add a default marker
+        new google.maps.Marker({
+          position: location,
+          map: map
+        });
+      }
+    </script>
     <script
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap"
+      async
       defer
     ></script>
   </head>
-
   <body>
     <div id="map"></div>
   </body>
 </html>
+
