@@ -4,40 +4,45 @@
     <title>HummingbirdZ Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow: hidden;
-      }
-      #map {
-        height: 100%;
-        width: 100%;
-      }
+      html, body { margin: 0; padding: 0; height: 100%; }
+      #map { height: 100%; width: 100%; }
     </style>
+    <!-- Load Maps API -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8"
+      defer
+    ></script>
   </head>
   <body>
     <div id="map"></div>
 
     <script>
-      function initMap() {
-        const map = new google.maps.Map(document.getElementById("map"), {
-          center: { lat: 50.721, lng: -3.531 },
-          zoom: 10,
-          mapTypeId: "roadmap",
-          gestureHandling: "greedy",
-          zoomControl: true,
-          fullscreenControl: false,
-          streetViewControl: false
-        });
+      // 1. Run this once the API script has loaded
+      window.onload = function initMap() {
+        // 2. Create the map
+        const map = new google.maps.Map(
+          document.getElementById("map"),
+          {
+            center: { lat: 50.721, lng: -3.531 },
+            zoom: 10,
+            mapTypeId: "roadmap"
+          }
+        );
 
-        // Load GeoJSON from Google Sheets via Apps Script
-        map.data.loadGeoJson('https://script.google.com/macros/s/AKfycbymlwpGAPELVSHE3x-yCXYtNSf/exec');
-      }
-    </script>
-
-    <script async
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap">
+        // 3. Fetch your GeoJSON and add a default marker for each Feature
+        fetch("https://script.google.com/macros/s/AKfycbwocJBbSUgMMIos8S443mdkP4ukY6cemJ9m-vAz9spu/exec")
+          .then(res => res.json())
+          .then(data => {
+            data.features.forEach(feature => {
+              const [lng, lat] = feature.geometry.coordinates;
+              new google.maps.Marker({
+                position: { lat, lng },
+                map: map
+              });
+            });
+          })
+          .catch(err => console.error("Error loading GeoJSON:", err));
+      };
     </script>
   </body>
 </html>
