@@ -4,19 +4,40 @@
     <title>HummingbirdZ Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      html, body { margin: 0; padding: 0; height: 100%; }
-      #map { height: 100%; width: 100%; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      #map {
+        height: 100%;
+        width: 100%;
+      }
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8"></script>
   </head>
   <body>
     <div id="map"></div>
+
     <script>
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 50.721, lng: -3.531 }, // Exeter area
-        zoom: 10,
-        mapTypeId: "roadmap"
-      });
+      function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 50.721, lng: -3.531 },
+          zoom: 10,
+          mapTypeId: "roadmap",
+          gestureHandling: "greedy",
+          zoomControl: true,
+          fullscreenControl: false,
+          streetViewControl: false
+        });
+
+        // Optional: Load GeoJSON here if ready
+        // map.data.loadGeoJson('https://yourdomain.com/jobs.geojson');
+      }
+    </script>
+
+    <script async
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap">
     </script>
   </body>
 </html>
