@@ -9,40 +9,51 @@
     </style>
 
     <script>
-      // Callback for GeoJSON data
+      let map;
+      const addedJobIds = new Set();
+
+      // Called by your Apps Script JSONP
       function gotGeoJson(collection) {
         console.log("Got GeoJSON:", collection);
-
         collection.features.forEach(f => {
-          const [lng, lat] = f.geometry.coordinates; // GeoJSON order
-          new google.maps.Marker({
-            position: { lat: Number(lat), lng: Number(lng) },
-            map: window.map
-          });
+          // Use coordinates as unique ID
+          const id = f.geometry.coordinates.join(',');
+          if (!addedJobIds.has(id)) {
+            addedJobIds.add(id);
+
+            const [lng, lat] = f.geometry.coordinates;
+            new google.maps.Marker({
+              position: { lat, lng },
+              map: map,
+              title: f.properties.address || "Job"
+            });
+          }
         });
       }
 
-      // Init the Google Map
-      function initMap() {
-        window.map = new google.maps.Map(
-          document.getElementById("map"),
-          {
-            center: { lat: 50.721, lng: -3.531 }, // Exeter area
-            zoom: 12
-          }
-        );
-
-        // Load GeoJSON from Apps Script via JSONP
+      function fetchJobs() {
         const jsonp = document.createElement("script");
-        jsonp.src =
-          "https://script.google.com/macros/s/AKfycbwocJBbSUgMMIos8S443mdkP4ukY6cemJ9m-vAz9spu/exec"
-          + "?callback=gotGeoJson";
+        jsonp.src = "https://script.google.com/macros/s/AKfycbzWPKe_mL0LFjono0hAPa28GHUvdXNJYnP2TEwrooFU79-qYj7Ynei-DpX0saZ4p9cB_Q/exec?callback=gotGeoJson";
         document.body.appendChild(jsonp);
+      }
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 50.721, lng: -3.531 },
+          zoom: 10,
+          mapId: "67b6ebd01839b65816f4222e"
+        });
+
+        // Load existing jobs initially
+        fetchJobs();
+
+        // Poll for new jobs every 15 seconds
+        setInterval(fetchJobs, 15000);
       }
     </script>
 
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap&loading=async"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap"
       async
       defer
     ></script>
