@@ -1,64 +1,63 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>HummingbirdZ Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      html, body { margin: 0; padding: 0; height: 100%; }
-      #map { height: 100%; width: 100%; }
-    </style>
+<head>
+  <title>HummingbirdZ Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; width: 100%; }
+  </style>
+  <script>
+    let map;
+    let markers = {}; // store markers by unique ID
 
-    <script>
-      let map;
-      const addedJobIds = new Set();
+    async function initMap() {
+      const { Map } = await google.maps.importLibrary("maps");
+      const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
-      // Called by your Apps Script JSONP
-      function gotGeoJson(collection) {
-        console.log("Got GeoJSON:", collection);
+      map = new Map(document.getElementById("map"), {
+        center: { lat: 50.721, lng: -3.531 },
+        zoom: 10,
+        mapId: '67b6ebd01839b65816f4222e' // your custom map style
+      });
+
+      // load initial markers
+      loadMarkers(AdvancedMarkerElement);
+
+      // optional: poll for new jobs every 10 seconds
+      setInterval(() => loadMarkers(AdvancedMarkerElement), 10000);
+    }
+
+    function loadMarkers(AdvancedMarkerElement) {
+      const jsonp = document.createElement("script");
+      jsonp.src = "https://script.google.com/macros/s/AKfycbzjI8mmj3hNgMgAsaRq_gPfZkddGb2SBR3zXgVNyDT6CUL4eY_e9N3iweSj60bQ4D6W7Q/exec?callback=gotGeoJson";
+      jsonp.defer = true;
+      jsonp.async = true;
+      document.body.appendChild(jsonp);
+
+      window.gotGeoJson = function(collection) {
         collection.features.forEach(f => {
-          // Use coordinates as unique ID
-          const id = f.geometry.coordinates.join(',');
-          if (!addedJobIds.has(id)) {
-            addedJobIds.add(id);
-
+          const id = f.geometry.coordinates.join(",") + "|" + (f.properties.address || "");
+          if (!markers[id]) {
             const [lng, lat] = f.geometry.coordinates;
-            new google.maps.Marker({
+
+            // create the advanced marker
+            const marker = new AdvancedMarkerElement({
+              map,
               position: { lat, lng },
-              map: map,
               title: f.properties.address || "Job"
             });
+
+            markers[id] = marker;
           }
         });
-      }
+      };
+    }
+  </script>
 
-      function fetchJobs() {
-        const jsonp = document.createElement("script");
-        jsonp.src = "https://script.google.com/macros/s/AKfycbzWPKe_mL0LFjono0hAPa28GHUvdXNJYnP2TEwrooFU79-qYj7Ynei-DpX0saZ4p9cB_Q/exec?callback=gotGeoJson";
-        document.body.appendChild(jsonp);
-      }
-
-      function initMap() {
-        map = new google.maps.Map(document.getElementById("map"), {
-          center: { lat: 50.721, lng: -3.531 },
-          zoom: 10,
-          mapId: "67b6ebd01839b65816f4222e"
-        });
-
-        // Load existing jobs initially
-        fetchJobs();
-
-        // Poll for new jobs every 15 seconds
-        setInterval(fetchJobs, 15000);
-      }
-    </script>
-
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap"
-      async
-      defer
-    ></script>
-  </head>
-  <body>
-    <div id="map"></div>
-  </body>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap&v=beta" async defer></script>
+</head>
+<body>
+  <div id="map"></div>
+</body>
 </html>
