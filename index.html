@@ -3,37 +3,31 @@
 <head>
   <meta charset="utf-8">
   <title>Google Maps Dynamic Markers</title>
-
-  <!-- Load Material Symbols Outlined -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-
+  <!-- Material Symbols Filled Font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Filled:opsz,wght,FILL,GRAD@20..48,100..700,-1..1,-50..200" />
   <style>
     #map { height: 100vh; width: 100%; }
 
-    .material-symbol-marker {
-      font-family: 'Material Symbols Outlined';
+    .material-symbols-filled {
       font-variation-settings:
-        'FILL' 0,
-        'wght' 400,
+        'FILL' -1,     /* filled icon */
+        'wght' 400,    /* normal weight */
         'GRAD' 0,
-        'opsz' 24;
-      font-size: 32px;
+        'opsz' 24;     /* default optical size */
       display: flex;
       justify-content: center;
       align-items: center;
     }
   </style>
-
-  <!-- Load Google Maps API with marker library -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&libraries=marker"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&map_ids=67b6ebd01839b65816f4222e&libraries=marker"></script>
 </head>
 <body>
   <div id="map"></div>
-
   <script>
     const map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat: 50.7374, lng: -3.5204 }, // Exeter
-      zoom: 13
+      center: { lat: 50.736, lng: -3.501 }, // approximate center of Exeter
+      zoom: 13,
+      mapId: '67b6ebd01839b65816f4222e'
     });
 
     const markers = {};
@@ -46,13 +40,14 @@
 
         geojson.features.forEach(feature => {
           const id = feature.properties.address || feature.geometry.coordinates.join(',');
-          if (lastJobIds.has(id)) return;
+
+          if (lastJobIds.has(id)) return; // skip already-added marker
 
           const iconName = feature.properties.icon || "place";
           const color = feature.properties.companyColor || "#000000";
 
           const el = document.createElement("div");
-          el.className = "material-symbol-marker";
+          el.className = "material-symbols-filled";
           el.style.color = color;
           el.textContent = iconName;
 
@@ -68,7 +63,6 @@
           markers[id] = marker;
           lastJobIds.add(id);
         });
-
       } catch (e) {
         console.error("Failed to fetch jobs:", e);
       }
@@ -76,8 +70,7 @@
 
     // Initial load
     fetchNewJobs();
-
-    // Poll every 3 seconds
+    // Poll every 3 seconds for new jobs
     setInterval(fetchNewJobs, 3000);
   </script>
 </body>
