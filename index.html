@@ -1,22 +1,86 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>HummingbirdZ Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      html, body { margin: 0; padding: 0; height: 100%; }
-      #map { height: 100%; width: 100%; }
-    </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8"></script>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script>
+<head>
+  <meta charset="utf-8">
+  <title>HummingbirdZ Admin Map</title>
+
+  <!-- Material Symbols filled (opsz 24) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
+
+  <style>
+    #map { height: 100vh; width: 100%; }
+
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+      font-size: 24px;               /* restored to 24px as you requested */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    async function initMap() {
       const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 50.721, lng: -3.531 }, // Exeter area
-        zoom: 10,
-        mapTypeId: "roadmap"
+        center: { lat: 50.7398825, lng: -3.5009917 }, // Exeter
+        zoom: 13,
+        mapId: '67b6ebd01839b65816f4222e'
       });
-    </script>
-  </body>
+
+      const markers = {};
+      const lastJobIds = new Set();
+
+      async function fetchNewJobs() {
+        try {
+          const res = await fetch("https://script.google.com/macros/s/AKfycbzjI8mmj3hNgMgAsaRq_gPfZkddGb2SBR3zXgVNyDT6CUL4eY_e9N3iweSj60bQ4D6W7Q/exec");
+          const geojson = await res.json();
+
+          geojson.features.forEach(feature => {
+            const id = feature.properties.address || `${feature.geometry.coordinates[1]},${feature.geometry.coordinates[0]}`;
+            if (lastJobIds.has(id)) return;
+
+            const iconName = feature.properties.icon || "place";
+            const color = feature.properties.companyColor || "#000000";
+
+            const el = document.createElement("span");
+            el.className = "material-symbols-outlined";
+            el.style.color = color;
+            el.textContent = iconName; // keep as textContent so ligature renders
+
+            const marker = new google.maps.marker.AdvancedMarkerElement({
+              map,
+              position: {
+                lat: parseFloat(feature.geometry.coordinates[1]),
+                lng: parseFloat(feature.geometry.coordinates[0])
+              },
+              content: el
+            });
+
+            markers[id] = marker;
+            lastJobIds.add(id);
+          });
+        } catch (err) {
+          console.error("Failed to fetch jobs:", err);
+        }
+      }
+
+      // initial load and polling
+      fetchNewJobs();
+      setInterval(fetchNewJobs, 3000);
+    }
+
+    window.initMap = initMap;
+  </script>
+
+  <!-- Load Maps JS API with marker library -->
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap&libraries=marker"></script>
+</body>
 </html>
