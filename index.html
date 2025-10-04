@@ -1,32 +1,74 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>HummingbirdZ Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      html, body { margin: 0; padding: 0; height: 100%; }
-      #map { height: 100%; width: 100%; }
-    </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8"></script>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script>
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 50.721, lng: -3.531 }, // Exeter area
-        zoom: 10,
-        mapTypeId: "roadmap"
-      });
+<head>
+  <meta charset="utf-8">
+  <title>Google Maps Dynamic Markers</title>
+  <!-- Load the filled Material Symbols font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Filled">
+  <style>
+    #map { height: 100vh; width: 100%; }
+    .material-icon-marker {
+      font-family: 'Material Symbols Filled';
+      font-variation-settings: 'FILL' 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px; /* keep same size as before */
+    }
+  </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=marker"></script>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: 50.7398825, lng: -3.5009917 }, // initial center on Exeter
+      zoom: 13,
+      mapId: '67b6ebd01839b65816f4222e'
+    });
 
-      // Load GeoJSON from your Apps Script
-      fetch("https://script.google.com/macros/s/AKfycbwocJBbSUgMMIos8S443mdkP4ukY6cemJ9m-vAz9spu/dev")
-        .then(response => response.json())
-        .then(data => {
-          map.data.addGeoJson(data);
-        })
-        .catch(error => {
-          console.error("Failed to load GeoJSON:", error);
+    const markers = {};
+    let lastJobIds = new Set();
+
+    async function fetchNewJobs() {
+      try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzjI8mmj3hNgMgAsaRq_gPfZkddGb2SBR3zXgVNyDT6CUL4eY_e9N3iweSj60bQ4D6W7Q/exec");
+        const geojson = await response.json();
+
+        geojson.features.forEach(feature => {
+          const id = feature.properties.address || feature.properties.lat + ',' + feature.properties.lng;
+          if (lastJobIds.has(id)) return; // skip already-added marker
+
+          const iconName = feature.properties.icon || "place";
+          const color = feature.properties.companyColor || "#000000";
+
+          const el = document.createElement("div");
+          el.className = "material-icon-marker";
+          el.style.color = color;
+          el.textContent = iconName; // keep as textContent for ligature to render
+
+          const marker = new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: {
+              lat: parseFloat(feature.geometry.coordinates[1]),
+              lng: parseFloat(feature.geometry.coordinates[0])
+            },
+            content: el
+          });
+
+          markers[id] = marker;
+          lastJobIds.add(id);
         });
-    </script>
-  </body>
+      } catch (e) {
+        console.error("Failed to fetch jobs:", e);
+      }
+    }
+
+    // Initial load
+    fetchNewJobs();
+
+    // Poll every 3 seconds for new jobs
+    setInterval(fetchNewJobs, 3000);
+  </script>
+</body>
 </html>
