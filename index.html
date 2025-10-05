@@ -16,11 +16,12 @@
         'wght' 400,
         'GRAD' 0,
         'opsz' 24;
-      font-size: 24px;               /* restored to 24px as you requested */
+      font-size: 24px;
       display: flex;
       justify-content: center;
       align-items: center;
       color: inherit;
+      -webkit-text-stroke: 0.75px #222; /* thin dark outline */
     }
   </style>
 </head>
@@ -32,11 +33,14 @@
       const map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 50.7398825, lng: -3.5009917 }, // Exeter
         zoom: 13,
-        mapId: '67b6ebd01839b65816f4222e'
+        mapId: '67b6ebd01839b658b79a400c' // NEW Admin Map ID
       });
 
       const markers = {};
       const lastJobIds = new Set();
+
+      // Create a single info window to reuse for all markers
+      const infoWindow = new google.maps.InfoWindow();
 
       async function fetchNewJobs() {
         try {
@@ -53,15 +57,30 @@
             const el = document.createElement("span");
             el.className = "material-symbols-outlined";
             el.style.color = color;
-            el.textContent = iconName; // keep as textContent so ligature renders
+            el.textContent = iconName;
+
+            const position = {
+              lat: parseFloat(feature.geometry.coordinates[1]),
+              lng: parseFloat(feature.geometry.coordinates[0])
+            };
 
             const marker = new google.maps.marker.AdvancedMarkerElement({
               map,
-              position: {
-                lat: parseFloat(feature.geometry.coordinates[1]),
-                lng: parseFloat(feature.geometry.coordinates[0])
-              },
+              position,
               content: el
+            });
+
+            // Add click listener to open info window
+            marker.addListener("click", () => {
+              const content = `
+                <div style="font-family: Arial, sans-serif; font-size: 14px;">
+                  <strong>${feature.properties.companyName}</strong><br>
+                  ${feature.properties.address}<br>
+                  <em>${feature.properties.jobType}</em>
+                </div>
+              `;
+              infoWindow.setContent(content);
+              infoWindow.open(map, marker);
             });
 
             markers[id] = marker;
@@ -72,7 +91,6 @@
         }
       }
 
-      // initial load and polling
       fetchNewJobs();
       setInterval(fetchNewJobs, 3000);
     }
@@ -80,7 +98,6 @@
     window.initMap = initMap;
   </script>
 
-  <!-- Load Maps JS API with marker library -->
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-RylSa34BE858N-s7VGpRSYW0gOj0at8&callback=initMap&libraries=marker"></script>
 </body>
 </html>
