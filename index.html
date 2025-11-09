@@ -76,7 +76,9 @@
                 <div style="font-family: Arial, sans-serif; font-size: 14px;">
                   <strong>${feature.properties.companyName}</strong><br>
                   ${feature.properties.address}<br>
-                  <em>${feature.properties.jobType}</em>
+                  <em>${feature.properties.jobType}</em><br>
+                  ${feature.properties.notes ? `<strong>Notes:</strong> ${feature.properties.notes}<br>` : ""}
+                  ${feature.properties.what3words ? `<strong>W3W:</strong> ${feature.properties.what3words}` : ""}
                 </div>
               `;
               infoWindow.setContent(content);
